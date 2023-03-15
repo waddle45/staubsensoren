@@ -104,13 +104,6 @@ class App:
                     canvas = FigureCanvasTkAgg(fig, master=plot_window)
                     canvas.draw()
                     canvas.get_tk_widget().place(x=0, y=20)
-
-                    # Add a toolbar to the plot
-                    toolbar = NavigationToolbar2Tk(canvas, plot_window)
-                    toolbar.update()
-                    toolbar.place(x=0, y=500)
-
-
             else:
                 mb.showerror("Falscher Werttyp", "Du musst den Auszuwertenden Werttyp auswählen!")
         except ValueError:
