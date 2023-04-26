@@ -1,19 +1,14 @@
 import tkinter as tk
-from tkinter import ttk, filedialog, messagebox
+from tkinter import ttk, filedialog
 from tkinter import messagebox as mb
 from datetime import datetime
-
-import matplotlib.pyplot
 import matplotlib.pyplot as plt
-import numpy as np
-from matplotlib.backends._backend_tk import NavigationToolbar2Tk
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+
+from sql.SQLMain import SQLMain
 
 
 class App:
-
     selected: bool = False
-    file = False
 
     def __init__(self, root):
         self.root = root
@@ -67,45 +62,36 @@ class App:
         else:
             self.selected = False
 
-
-
     def submit(self):
         try:
+            sql = SQLMain()
             if self.selected:
                 start_date = datetime.strptime(self.start_date_picker.get(), "%d.%m.%Y")
                 end_date = datetime.strptime(self.end_date_picker.get(), "%d.%m.%Y")
-
                 if start_date.year != 2022 or end_date.year != 2022:
                     mb.showerror("Falsches Jahr", "Bitte gebe ein Datum aus dem Jahr 2022 ein.")
                 elif end_date < start_date:
                     mb.showerror("Falsche Daten.", "Das Enddatum muss nach dem Startdatum liegen.")
                 else:
                     # Create a new window for the plot
-                    x = np.linspace(0, 10, 100)
-                    y = np.sin(x)
-
-                    # Create a new window to display the plot
-                    plot_window = tk.Toplevel(self.root)
-                    plot_window.title("Plot")
-                    plot_window.geometry("650x500")
-                    plot_window.resizable(False, False)
-                    close_button = tk.Button(plot_window, text="Schließen", command=plot_window.destroy)
-                    close_button.place(x=35, y=0)
-                    # Add "Save" and "Close" buttons
-                    save_button = tk.Button(plot_window, text="Save", command=lambda: self.save_plot())
-                    save_button.place(x=0, y=0)
+                    values = sql.get_values_from_dates(self.selected_value.get(), start_date, end_date)
+                    average = sql.calculate_average(
+                        sql.get_values_from_dates(self.selected_value.get(), start_date, end_date))
                     # Create the plot
-                    fig, ax = plt.subplots()
-                    ax.plot(x, y)
-                    ax.set_xlabel("X")
-                    ax.set_ylabel(f"{self.selected_value}")
+                    fig, ax = plt.subplots(1, 1)
+                    ax.plot(values, label=f'{self.selected_value.get()}')
+                    #ax.plot(average, label='average', linestyle='-')
+                    ax.axhline(y=average, color='r', label=f'Durchschnitt: {round(average, 2)}')
+                    ax.plot(min(values), label=f"Minimum: {min(values)}")
+                    ax.plot(max(values), label=f'Maximum: {max(values)}')
+                    ax.set_xlabel("Messungspunkte")
+                    ax.set_ylabel(f"{self.selected_value.get()}")
                     ax.set_title(f"{str(start_date).split(' ')[0]} - {str(end_date).split(' ')[0]}")
-                    # Embed the plot in a Tkinter canvas
-                    canvas = FigureCanvasTkAgg(fig, master=plot_window)
-                    canvas.draw()
-                    canvas.get_tk_widget().place(x=0, y=20)
+                    ax.legend(loc='best')
+                    fig.show()
             else:
                 mb.showerror("Falscher Werttyp", "Du musst den Auszuwertenden Werttyp auswählen!")
+
         except ValueError:
             mb.showerror("Invalid Date", "Please enter a valid date in the format DD.MM.YYYY")
 
@@ -114,7 +100,6 @@ class App:
         # Save the plot to the selected file path
         if path:
             plt.savefig(path)
-
 
     def show_help_message(self, event):
         self.help_text.set("Benutze das Datumsformat DD.MM.YYYY")
@@ -128,4 +113,3 @@ app = App(root)
 root.protocol("WM_DELETE_WINDOW", lambda: root.destroy())
 
 root.mainloop()
-
