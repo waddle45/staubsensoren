@@ -16,7 +16,7 @@ class Download:
 
         while True:
             date = f"2022-{self.date.strftime('%m-%d')}"
-            url = f"http://archive.sensor.community/{date}/{date}_sds011_sensor_3659.csv"
+            url = f"https://archive.sensor.community/2022/{date}/{date}_sds011_sensor_3659.csv"
             r = requests.get(url=url, allow_redirects=True)
             open(f'./csv_files/{date}.csv', 'wb').write(r.content)
             if self.date != "2023-01-01":
